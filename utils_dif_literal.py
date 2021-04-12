@@ -4,13 +4,26 @@ Created on Wed Feb 12 14:17:14 2020
 
 Este arquivo guardará os objetos de funções auxiliares para o código de diferença literal
 
+software necessario (tika):
+    Java Runtime https://java.com/en/download/
+
+pacotes necessários:
+    pip install python-docx
+    pip install tika
+
 @author: PAULO.GFERREIRA
 """
 
 """------ Pacotes ------"""
-import unicodedata, re
+import unicodedata, re, os
 from docx import Document
 from datetime import datetime
+
+# Tika é o pacote para importação em qualquer formato
+import tika
+#No windows é necessário inicializar a VM de java
+if os.name == 'nt': tika.initVM()
+from tika import parser
 
 """------ Classes ------"""
 
@@ -114,6 +127,51 @@ def importa_textos_parags_word(arquivo, limpa_textos=True, minusculas=False, sep
     
     for parag in doc.paragraphs:
         if limpa_textos: paragrafo = limpa_texto(parag.text).strip()
+        if minusculas: paragrafo = paragrafo.lower()               
+        # Esta linha se livra das strings vazias, e dá um tratamento nos números
+        if paragrafo:
+            if altera_numeros: paragrafo = trata_numeros(paragrafo)
+            paragrafos_arquivo.append(paragrafo)
+
+    # Em vez de separar por paragraphs do Docx, separa por outros caracteres. O ponto é o default
+    if separador_custom:
+        paragrafos_arquivo = ' '.join(paragrafos_arquivo)                
+        trechos_texto = [re.sub(' +', ' ',t).strip() for t in paragrafos_arquivo.split(separador_custom) if t.strip()]
+    
+        # Aprimoramento de tokens
+        if alt_tokens: trechos_texto = altera_tokenizacao_prox(trechos_texto, separador_custom)
+
+    # Cria objs trecho, tem um gato aqui pra lidar com o tratamento de números
+    objs_trechos = tuple([Trecho_obj(i, re.sub('¢',r'.',trechos_texto[i])) for i in range(len(trechos_texto))])
+    
+    print('  Concluído às:', re.sub(':','.',str(datetime.now())[2:-7]).split()[1])        
+    return objs_trechos
+
+# Função que importa de qualquer* formato
+def importa_textos_tika(arquivo, limpa_textos=True, minusculas=False, separador_custom=False, alt_tokens=False):
+
+    # Parse de dados do arquivo
+    file_data = parser.from_file(arquivo)
+    
+    # Pega o texto
+    texto = file_data['content']
+    
+    # A conversão funcionou?
+    if texto:
+        # Limitando a duas quebras de linha consecutivas
+        paragrafos = [t.strip() for t in texto.split('\n') if t.strip()]
+    # Falhou em extrair o texto, nada a comparar aqui
+    else:
+        print('  Falhou arquivo:', arquivo)
+        return None
+    
+    if separador_custom=='.': altera_numeros = True
+    else: altera_numeros = False
+    
+    paragrafos_arquivo = []
+    
+    for paragrafo in paragrafos:
+        if limpa_textos: paragrafo = limpa_texto(paragrafo).strip()
         if minusculas: paragrafo = paragrafo.lower()               
         # Esta linha se livra das strings vazias, e dá um tratamento nos números
         if paragrafo:
