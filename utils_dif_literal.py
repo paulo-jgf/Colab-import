@@ -160,7 +160,11 @@ def altera_tokens_tika(paragrafos_arquivo):
         
         # Se começa com minuscula, vamos juntar ao anterior
         if p[0].islower():
-            novos_trechos[-1] = novos_trechos[-1] +' '+ p
+            if proximo:
+                novos_trechos.append(proximo +' '+ p)
+                proximo = ''
+            else: 
+                novos_trechos[-1] = novos_trechos[-1] +' '+ p
             continue
         
         # Junta ao proximo
@@ -175,6 +179,8 @@ def altera_tokens_tika(paragrafos_arquivo):
         
         # Junta finalmente
         novos_trechos.append(p)
+        
+        print(novos_trechos)
         
     # Sobrou um proximo?
     if proximo: novos_trechos.append(proximo)
