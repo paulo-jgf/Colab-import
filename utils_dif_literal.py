@@ -147,6 +147,40 @@ def importa_textos_parags_word(arquivo, limpa_textos=True, minusculas=False, sep
     print('  Concluído às:', re.sub(':','.',str(datetime.now())[2:-7]).split()[1])        
     return objs_trechos
 
+# Altera tokes (trechos) tika
+def altera_tokens_tika(paragrafos_arquivo):
+    novos_trechos, proximo = [], ''
+    
+    for i in range(len(paragrafos_arquivo)):
+        p = paragrafos_arquivo[i]
+        # primeiro
+        if not novos_trechos: 
+            novos_trechos.append(p)
+            continue
+        
+        # Se começa com minuscula, vamos juntar ao anterior
+        if p[0].islower():
+            novos_trechos[-1] = novos_trechos[-1] +' '+ p
+            continue
+        
+        # Junta ao proximo
+        if proximo:
+            p = proximo +' '+ p
+            proximo = ''
+        
+        # Devemos juntar ao próximo?
+        if len(re.sub('[\d\.,\- ]','',p)) < 6:
+            proximo = p
+            continue
+        
+        # Junta finalmente
+        novos_trechos.append(p)
+        
+    # Sobrou um proximo?
+    if proximo: novos_trechos.append(proximo)
+    
+    return novos_trechos
+
 # Função que importa de qualquer* formato
 def importa_textos_tika(arquivo, limpa_textos=True, minusculas=False, separador_custom=False, alt_tokens=False):
 
@@ -187,7 +221,8 @@ def importa_textos_tika(arquivo, limpa_textos=True, minusculas=False, separador_
         if alt_tokens: trechos_texto = altera_tokenizacao_prox(trechos_texto, separador_custom)
         
     else:
-        trechos_texto = paragrafos_arquivo
+        if alt_tokens: trechos_texto = altera_tokens_tika(paragrafos_arquivo)
+        else: trechos_texto = paragrafos_arquivo
 
     # Cria objs trecho, tem um gato aqui pra lidar com o tratamento de números
     objs_trechos = tuple([Trecho_obj(i, re.sub('¢',r'.',trechos_texto[i])) for i in range(len(trechos_texto))])
