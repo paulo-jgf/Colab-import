@@ -185,6 +185,9 @@ def importa_textos_tika(arquivo, limpa_textos=True, minusculas=False, separador_
     
         # Aprimoramento de tokens
         if alt_tokens: trechos_texto = altera_tokenizacao_prox(trechos_texto, separador_custom)
+        
+    else:
+        trechos_texto = paragrafos_arquivo
 
     # Cria objs trecho, tem um gato aqui pra lidar com o tratamento de números
     objs_trechos = tuple([Trecho_obj(i, re.sub('¢',r'.',trechos_texto[i])) for i in range(len(trechos_texto))])
