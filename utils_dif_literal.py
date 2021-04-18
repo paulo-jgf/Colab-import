@@ -83,7 +83,7 @@ def prepara_trechos_obj(texto, limpa_textos=False, minusculas=False, separador='
     return tuple([Trecho_obj(i, trechos_texto[i]) for i in range(len(trechos_texto))])
 
 # Limpa parags
-def limpa_texto(texto, remove_acento=False, ref_re='[^a-zA-Z0-9/\-.,;çÇàÀãÃõÕâÂôÔêÊáÁéÉíÍóÓúÚüÜ \\\]'):
+def limpa_texto(texto, remove_acento=False, ref_re='[^a-zA-Z0-9/\(\)\-.,;çÇàÀãÃõÕâÂôÔêÊáÁéÉíÍóÓúÚüÜ \\\]'):
     texto = re.sub(' +', ' ', texto)    
     # Texto integro 
     texto = re.sub(ref_re, '', texto)    
@@ -215,10 +215,11 @@ def importa_textos_tika(arquivo, limpa_textos=True, minusculas=False, separador_
     # Em vez de separar por paragraphs do Docx, separa por outros caracteres. O ponto é o default
     if separador_custom:
         paragrafos_arquivo = ' '.join(paragrafos_arquivo)                
-        trechos_texto = [re.sub(' +', ' ',t).strip() for t in paragrafos_arquivo.split(separador_custom) if t.strip()]
+        trechos_texto = [re.sub(' +', ' ',t).strip() + separador_custom
+        for t in paragrafos_arquivo.split(separador_custom) if t.strip()]
     
         # Aprimoramento de tokens
-        if alt_tokens: trechos_texto = altera_tokenizacao_prox(trechos_texto, separador_custom)
+        if alt_tokens: trechos_texto = altera_tokens_tika(trechos_texto)
         
     else:
         if alt_tokens: trechos_texto = altera_tokens_tika(paragrafos_arquivo)
